@@ -1,0 +1,762 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartWasteAI | Urban Waste Optimization</title>
+
+<style>
+:root {
+  --bg: #0b1120;
+  --panel: #141e30;
+  --panel2: #1b2940;
+  --text: #edf4ff;
+  --muted: #91a4bf;
+  --green: #35d39a;
+  --yellow: #ffcc66;
+  --red: #ff6b7a;
+  --blue: #66aaff;
+  --border: #2b3b54;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+header {
+  padding: 22px 4%;
+  background: #101a2b;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.brand { font-size: 25px; font-weight: bold; }
+.brand span { color: var(--green); }
+.subtitle { color: var(--muted); margin-top: 6px; font-size: 13px; }
+
+.live {
+  color: var(--green);
+  background: #153b35;
+  padding: 9px 13px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+main { padding: 24px 4%; max-width: 1600px; margin: auto; }
+
+h2 { font-size: 18px; margin-top: 0; }
+.muted { color: var(--muted); font-size: 13px; }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.kpi-label { color: var(--muted); font-size: 13px; }
+.kpi-value { font-size: 30px; font-weight: bold; margin: 12px 0 5px; }
+.green { color: var(--green); }
+.yellow { color: var(--yellow); }
+.red { color: var(--red); }
+.blue { color: var(--blue); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.section { margin-bottom: 18px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+
+button, select {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+button:hover { border-color: var(--green); }
+button.primary { background: #167e63; border-color: #167e63; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.stress-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.stress-button { min-height: 75px; text-align: left; line-height: 1.5; }
+.stress-button strong { display: block; font-size: 13px; }
+.stress-button small { color: var(--muted); font-size: 11px; }
+
+.scenario-note {
+  background: #101a2b;
+  padding: 13px;
+  border-radius: 8px;
+  margin-top: 13px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.map-wrap {
+  background: #0d1727;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#cityMap { display: block; width: 100%; height: auto; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 14px; padding: 12px; color: var(--muted); font-size: 12px; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+
+.bin-list { display: grid; gap: 10px; }
+
+.bin-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #111b2b;
+}
+
+.bin-info { flex: 1; min-width: 0; }
+.bin-title { font-weight: bold; font-size: 13px; }
+.bin-sub { color: var(--muted); font-size: 12px; margin-top: 5px; }
+
+.progress {
+  height: 6px;
+  background: #29364a;
+  border-radius: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.progress div { height: 100%; border-radius: 5px; }
+.status { font-size: 11px; font-weight: bold; white-space: nowrap; }
+
+.route-list { padding-left: 23px; margin-bottom: 0; }
+.route-list li { padding: 7px 0; font-size: 13px; }
+.route-list small { color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { padding: 12px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+th { color: var(--muted); font-weight: normal; }
+
+.log { display: grid; gap: 10px; max-height: 260px; overflow: auto; }
+.log-entry { font-size: 12px; line-height: 1.5; border-left: 2px solid var(--green); padding: 5px 10px; }
+.log-entry time { display: block; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #000a;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+.empty { color: var(--muted); font-size: 13px; padding: 10px 0; }
+
+footer { text-align: center; padding: 22px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
+  .stress-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 650px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stress-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .bin-row { flex-wrap: wrap; }
+  .brand { font-size: 21px; }
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div>
+    <div class="brand">♻ Smart<span>WasteAI</span></div>
+    <div class="subtitle">Intelligent Urban Waste Collection Optimization</div>
+  </div>
+  <div class="live">● DEMO SYSTEM ACTIVE</div>
+</header>
+
+<main>
+  <section class="kpis">
+    <div class="card">
+      <div class="kpi-label">Total Waste Bins</div>
+      <div class="kpi-value" id="totalBins">20</div>
+      <div class="muted">Across 3 city zones</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Overflow / Critical</div>
+      <div class="kpi-value red" id="criticalBins">0</div>
+      <div class="muted">Bins requiring attention</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Collected This Run</div>
+      <div class="kpi-value green" id="collectedBins">0</div>
+      <div class="muted">Confirmed collections</div>
+    </div>
+    <div class="card">
+      <div class="kpi-label">Planned Route Stops</div>
+      <div class="kpi-value blue" id="routeStops">0</div>
+      <div class="muted">Estimated from demo data</div>
+    </div>
+  </section>
+
+  <section class="card section">
+    <h2>⚡ Stress Test Center</h2>
+    <div class="muted">Select a scenario to simulate changing city conditions.</div>
+
+    <div class="stress-grid">
+      <button class="stress-button" onclick="setScenario('normal')">
+        <strong>🟢 Normal Day</strong>
+        <small>Regular bin levels</small>
+      </button>
+      <button class="stress-button" onclick="setScenario('festival')">
+        <strong>🟡 Festival Surge</strong>
+        <small>Sudden waste increase</small>
+      </button>
+      <button class="stress-button" onclick="setScenario('truck')">
+        <strong>🔴 Truck Failure</strong>
+        <small>Reduced fleet capacity</small>
+      </button>
+      <button class="stress-button" onclick="setScenario('road')">
+        <strong>🟠 Road Blockage</strong>
+        <small>Some stops unavailable</small>
+      </button>
+      <button class="stress-button" onclick="setScenario('multiple')">
+        <strong>🟣 Multiple Events</strong>
+        <small>Combined disruptions</small>
+      </button>
+    </div>
+
+    <div class="scenario-note" id="scenarioNote">
+      <strong>Current scenario: Normal Day</strong><br>
+      Regular waste generation. The system prioritizes bins with higher fill levels.
+    </div>
+
+    <div class="toolbar">
+      <button class="primary" onclick="resetDemo()">↻ Reset Demo</button>
+      <button onclick="clearLog()">Clear Activity Log</button>
+    </div>
+  </section>
+
+  <div class="layout">
+    <section class="card">
+      <h2>🗺 City Operations Map</h2>
+      <div class="muted">Schematic map with bin locations and planned route.</div>
+
+      <div class="map-wrap" style="margin-top:14px">
+        <svg id="cityMap" viewBox="0 0 700 420" role="img" aria-label="Schematic city map"></svg>
+        <div class="map-legend">
+          <span><i class="dot" style="background:#35d39a"></i>Normal</span>
+          <span><i class="dot" style="background:#ffcc66"></i>Nearly full</span>
+          <span><i class="dot" style="background:#ff6b7a"></i>Critical</span>
+          <span><i class="dot" style="background:#66aaff"></i>Depot / Route</span>
+        </div>
+      </div>
+      <p class="muted">Note: This is a simulated map, not a live GPS or road-navigation map.</p>
+    </section>
+
+    <section class="card">
+      <h2>🚛 Optimized Collection Route</h2>
+      <div class="muted">Priority-based stop order for this demo.</div>
+      <div style="margin-top:12px" id="routeSummary" class="scenario-note"></div>
+      <ol class="route-list" id="routeList"></ol>
+      <div id="unservedBox" style="margin-top:16px"></div>
+    </section>
+  </div>
+
+  <div class="layout">
+    <section class="card">
+      <h2>🗑 Waste Bin Monitoring</h2>
+      <div class="muted">Select a bin to view its status or confirm collection.</div>
+
+      <div class="toolbar">
+        <select id="zoneFilter" onchange="renderAll()">
+          <option value="all">All Zones</option>
+          <option value="North">North Zone</option>
+          <option value="Central">Central Zone</option>
+          <option value="South">South Zone</option>
+        </select>
+        <select id="statusFilter" onchange="renderAll()">
+          <option value="all">All Statuses</option>
+          <option value="critical">Critical (80%+)</option>
+          <option value="warning">Warning (60–79%)</option>
+          <option value="normal">Normal (below 60%)</option>
+        </select>
+      </div>
+      <div class="bin-list" id="binList"></div>
+    </section>
+
+    <section class="card">
+      <h2>📋 Activity Log</h2>
+      <div class="muted">Latest simulated system events.</div>
+      <div class="log" id="activityLog" style="margin-top:14px"></div>
+    </section>
+  </div>
+
+  <section class="card section">
+    <h2>📊 Zone Summary</h2>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Zone</th>
+            <th>Total Bins</th>
+            <th>Critical</th>
+            <th>Average Fill</th>
+            <th>Recommended Action</th>
+          </tr>
+        </thead>
+        <tbody id="zoneTable"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="confirmModal">
+  <div class="modal-box">
+    <h2>Confirm Bin Collection</h2>
+    <p id="modalText" class="muted"></p>
+    <p>Did the driver complete this collection?</p>
+    <div class="modal-actions">
+      <button class="primary" onclick="confirmCollection()">Yes, Collected</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<footer>SmartWasteAI • Hackathon Prototype • All data in this dashboard is simulated</footer>
+
+<script>
+const originalBins = [
+  {id:"B-101", zone:"North", x:100, y:80, fill:92},
+  {id:"B-102", zone:"North", x:180, y:55, fill:67},
+  {id:"B-103", zone:"North", x:250, y:105, fill:43},
+  {id:"B-104", zone:"North", x:330, y:65, fill:86},
+  {id:"B-105", zone:"North", x:390, y:130, fill:52},
+  {id:"B-106", zone:"North", x:540, y:75, fill:78},
+  {id:"B-107", zone:"North", x:600, y:145, fill:33},
+  {id:"B-108", zone:"Central", x:130, y:205, fill:96},
+  {id:"B-109", zone:"Central", x:220, y:240, fill:72},
+  {id:"B-110", zone:"Central", x:320, y:205, fill:88},
+  {id:"B-111", zone:"Central", x:410, y:250, fill:48},
+  {id:"B-112", zone:"Central", x:500, y:210, fill:81},
+  {id:"B-113", zone:"Central", x:590, y:250, fill:56},
+  {id:"B-114", zone:"South", x:90, y:330, fill:75},
+  {id:"B-115", zone:"South", x:180, y:365, fill:91},
+  {id:"B-116", zone:"South", x:275, y:320, fill:39},
+  {id:"B-117", zone:"South", x:375, y:365, fill:84},
+  {id:"B-118", zone:"South", x:465, y:325, fill:63},
+  {id:"B-119", zone:"South", x:550, y:365, fill:94},
+  {id:"B-120", zone:"South", x:625, y:320, fill:45}
+];
+
+let bins = [];
+let scenario = "normal";
+let collected = new Set();
+let blocked = new Set();
+let failedTruck = false;
+let activeBinId = null;
+let route = [];
+let unserved = [];
+let logEntries = [];
+
+const scenarioInfo = {
+  normal: {
+    title:"Normal Day",
+    text:"Regular waste generation. Bins above the collection threshold are prioritized."
+  },
+  festival: {
+    title:"Festival Surge",
+    text:"Simulates a festival crowd by increasing bin fill levels. The route is recalculated to prioritize high-fill bins."
+  },
+  truck: {
+    title:"Truck Failure",
+    text:"Simulates one collection truck becoming unavailable. Demo capacity is reduced and lower-priority stops may remain unserved."
+  },
+  road: {
+    title:"Road Blockage",
+    text:"Simulates blocked access to selected bins. Those stops are temporarily excluded from the route and shown as unserved."
+  },
+  multiple: {
+    title:"Multiple Events",
+    text:"Combines festival-level waste increase, a truck failure, and blocked access to selected bins."
+  }
+};
+
+function cloneBins() {
+  return originalBins.map(b => ({...b}));
+}
+
+function getStatus(bin) {
+  if (collected.has(bin.id)) return "collected";
+  if (bin.fill >= 80) return "critical";
+  if (bin.fill >= 60) return "warning";
+  return "normal";
+}
+
+function statusColor(status) {
+  return {
+    critical:"#ff6b7a",
+    warning:"#ffcc66",
+    normal:"#35d39a",
+    collected:"#66aaff"
+  }[status];
+}
+
+function statusLabel(status) {
+  return {
+    critical:"CRITICAL",
+    warning:"WARNING",
+    normal:"NORMAL",
+    collected:"COLLECTED"
+  }[status];
+}
+
+function logEvent(message) {
+  logEntries.unshift({
+    time:new Date().toLocaleTimeString(),
+    message
+  });
+  logEntries = logEntries.slice(0, 35);
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById("activityLog");
+  if (!logEntries.length) {
+    el.innerHTML = '<div class="empty">No activity yet.</div>';
+    return;
+  }
+  el.innerHTML = logEntries.map(e =>
+    `<div class="log-entry"><time>${e.time}</time>${e.message}</div>`
+  ).join("");
+}
+
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#39;"
+  }[ch]));
+}
+
+function recalculateRoute() {
+  const eligible = bins.filter(b =>
+    !collected.has(b.id) && !blocked.has(b.id) && b.fill >= 60
+  );
+
+  eligible.sort((a, b) => {
+    const priorityA = a.fill + (a.fill >= 90 ? 15 : 0);
+    const priorityB = b.fill + (b.fill >= 90 ? 15 : 0);
+    return priorityB - priorityA;
+  });
+
+  const capacity = failedTruck ? 6 : 10;
+  route = eligible.slice(0, capacity);
+  unserved = eligible.slice(capacity).map(b => ({
+    ...b, reason:"Truck capacity reached"
+  }));
+
+  blocked.forEach(id => {
+    const b = bins.find(item => item.id === id);
+    if (b && !collected.has(id)) {
+      unserved.push({...b, reason:"Road access blocked"});
+    }
+  });
+
+  renderRoute();
+}
+
+function renderRoute() {
+  document.getElementById("routeStops").textContent = route.length;
+  document.getElementById("routeSummary").innerHTML =
+    `<strong>${route.length} planned stop(s)</strong><br>` +
+    `Demo truck capacity: ${failedTruck ? 6 : 10} stops<br>` +
+    `Unserved / blocked: ${unserved.length}`;
+
+  const list = document.getElementById("routeList");
+  if (!route.length) {
+    list.innerHTML = '<li class="empty">No collection stops currently required.</li>';
+  } else {
+    list.innerHTML = route.map((b, i) =>
+      `<li><strong>${b.id}</strong> — ${b.zone} Zone<br>
+      <small>${b.fill}% full · Priority stop ${i+1}</small></li>`
+    ).join("");
+  }
+
+  const box = document.getElementById("unservedBox");
+  if (!unserved.length) {
+    box.innerHTML = '<div class="scenario-note">All eligible stops fit within the simulated route capacity.</div>';
+  } else {
+    box.innerHTML = '<h2>⚠ Unserved / Blocked Bins</h2>' +
+      unserved.map(b =>
+        `<div class="bin-row"><div class="bin-info">
+          <div class="bin-title">${b.id} · ${b.fill}%</div>
+          <div class="bin-sub">${b.zone} Zone — ${b.reason}</div>
+        </div></div>`
+      ).join("");
+  }
+}
+
+function renderBins() {
+  const zone = document.getElementById("zoneFilter").value;
+  const statusFilter = document.getElementById("statusFilter").value;
+
+  const visible = bins.filter(b => {
+    const status = getStatus(b);
+    const zoneOk = zone === "all" || b.zone === zone;
+    const statusOk = statusFilter === "all" || status === statusFilter;
+    return zoneOk && statusOk;
+  });
+
+  const list = document.getElementById("binList");
+  if (!visible.length) {
+    list.innerHTML = '<div class="empty">No bins match these filters.</div>';
+    return;
+  }
+
+  list.innerHTML = visible.map(b => {
+    const status = getStatus(b);
+    const color = statusColor(status);
+    return `<div class="bin-row">
+      <div class="bin-info">
+        <div class="bin-title">${b.id} <span class="muted">· ${b.zone} Zone</span></div>
+        <div class="bin-sub">${b.fill}% full</div>
+        <div class="progress"><div style="width:${b.fill}%;background:${color}"></div></div>
+      </div>
+      <span class="status" style="color:${color}">${statusLabel(status)}</span>
+      ${status !== "collected" ?
+        `<button onclick="openConfirm('${b.id}')">Collect</button>` :
+        `<button disabled>Done</button>`}
+    </div>`;
+  }).join("");
+}
+
+function renderMetrics() {
+  const critical = bins.filter(b => !collected.has(b.id) && b.fill >= 80).length;
+  document.getElementById("totalBins").textContent = bins.length;
+  document.getElementById("criticalBins").textContent = critical;
+  document.getElementById("collectedBins").textContent = collected.size;
+
+  const zones = ["North", "Central", "South"];
+  document.getElementById("zoneTable").innerHTML = zones.map(zone => {
+    const list = bins.filter(b => b.zone === zone);
+    const avg = Math.round(list.reduce((sum, b) => sum + b.fill, 0) / list.length);
+    const criticalCount = list.filter(b => !collected.has(b.id) && b.fill >= 80).length;
+    const action = criticalCount > 0 ? "Prioritize collection" : "Routine monitoring";
+    return `<tr>
+      <td>${zone}</td><td>${list.length}</td><td>${criticalCount}</td>
+      <td>${avg}%</td><td>${action}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderMap() {
+  const svg = document.getElementById("cityMap");
+  let out = `
+    <rect width="700" height="420" fill="#0d1727"/>
+    <g fill="#17283b" stroke="#233950" stroke-width="1">
+      <rect x="25" y="25" width="95" height="45" rx="6"/>
+      <rect x="145" y="22" width="90" height="65" rx="6"/>
+      <rect x="270" y="25" width="110" height="42" rx="6"/>
+      <rect x="415" y="25" width="90" height="55" rx="6"/>
+      <rect x="535" y="25" width="125" height="65" rx="6"/>
+      <rect x="25" y="120" width="70" height="55" rx="6"/>
+      <rect x="160" y="125" width="85" height="55" rx="6"/>
+      <rect x="290" y="115" width="80" height="65" rx="6"/>
+      <rect x="430" y="120" width="95" height="55" rx="6"/>
+      <rect x="565" y="125" width="95" height="55" rx="6"/>
+      <rect x="25" y="225" width="75" height="65" rx="6"/>
+      <rect x="150" y="220" width="90" height="60" rx="6"/>
+      <rect x="280" y="225" width="100" height="55" rx="6"/>
+      <rect x="420" y="220" width="90" height="65" rx="6"/>
+      <rect x="550" y="225" width="110" height="55" rx="6"/>
+      <rect x="25" y="320" width="95" height="55" rx="6"/>
+      <rect x="160" y="315" width="90" height="65" rx="6"/>
+      <rect x="290" y="320" width="95" height="55" rx="6"/>
+      <rect x="425" y="315" width="85" height="65" rx="6"/>
+      <rect x="545" y="320" width="115" height="55" rx="6"/>
+    </g>
+    <g stroke="#30455d" stroke-width="8" opacity=".75">
+      <path d="M0 100 H700 M0 195 H700 M0 300 H700"/>
+      <path d="M125 0 V420 M260 0 V420 M400 0 V420 M530 0 V420"/>
+    </g>
+    <g stroke="#7389a4" stroke-width="1" stroke-dasharray="5 6" opacity=".5">
+      <path d="M0 100 H700 M0 195 H700 M0 300 H700"/>
+      <path d="M125 0 V420 M260 0 V420 M400 0 V420 M530 0 V420"/>
+    </g>
+    <text x="15" y="18" fill="#91a4bf" font-size="11">NORTH ZONE</text>
+    <text x="15" y="190" fill="#91a4bf" font-size="11">CENTRAL ZONE</text>
+    <text x="15" y="410" fill="#91a4bf" font-size="11">SOUTH ZONE</text>`;
+
+  if (route.length > 0) {
+    const points = route.map(b => `${b.x},${b.y}`).join(" ");
+    out += `<polyline points="${points}" fill="none" stroke="#66aaff"
+      stroke-width="4" stroke-linejoin="round" stroke-linecap="round"
+      stroke-dasharray="8 5" opacity=".9"/>`;
+  }
+
+  out += `
+    <g>
+      <rect x="315" y="185" width="70" height="30" rx="7" fill="#2458a6" stroke="#66aaff"/>
+      <text x="350" y="204" fill="white" font-size="11" text-anchor="middle">DEPOT</text>
+    </g>`;
+
+  bins.forEach(b => {
+    const status = getStatus(b);
+    const color = statusColor(status);
+    const blockedMark = blocked.has(b.id) && !collected.has(b.id);
+    out += `
+      <g role="button" tabindex="0" style="cursor:pointer"
+        onclick="openConfirm('${b.id}')" aria-label="${b.id}, ${b.fill}% full">
+        <circle cx="${b.x}" cy="${b.y}" r="10" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
+        <text x="${b.x}" y="${b.y+3.5}" fill="#0b1120" font-size="9" font-weight="bold" text-anchor="middle">${b.id.slice(2)}</text>
+        ${blockedMark ? `<path d="M${b.x-7} ${b.y-7} L${b.x+7} ${b.y+7} M${b.x+7} ${b.y-7} L${b.x-7} ${b.y+7}" stroke="white" stroke-width="2"/>` : ""}
+      </g>`;
+  });
+
+  svg.innerHTML = out;
+}
+
+function renderAll() {
+  recalculateRoute();
+  renderBins();
+  renderMetrics();
+  renderMap();
+}
+
+function openConfirm(id) {
+  const b = bins.find(item => item.id === id);
+  if (!b || collected.has(id)) {
+    alert("This bin has already been collected in the current demo.");
+    return;
+  }
+  activeBinId = id;
+  document.getElementById("modalText").textContent =
+    `${b.id} in ${b.zone} Zone is ${b.fill}% full. Confirm the simulated collection?`;
+  document.getElementById("confirmModal").style.display = "flex";
+}
+
+function closeModal() {
+  document.getElementById("confirmModal").style.display = "none";
+  activeBinId = null;
+}
+
+function confirmCollection() {
+  if (!activeBinId) return;
+  const b = bins.find(item => item.id === activeBinId);
+  if (!b) return;
+
+  collected.add(b.id);
+  b.fill = 0;
+  blocked.delete(b.id);
+
+  logEvent(`${b.id} collection confirmed. Fill level reset to 0%.`);
+  closeModal();
+  renderAll();
+}
+
+function setScenario(name) {
+  scenario = name;
+  bins = cloneBins();
+  collected = new Set();
+  blocked = new Set();
+  failedTruck = false;
+
+  if (name === "festival" || name === "multiple") {
+    bins.forEach((b, i) => {
+      b.fill = Math.min(100, b.fill + (i % 4) * 6 + 12);
+    });
+  }
+
+  if (name === "truck" || name === "multiple") {
+    failedTruck = true;
+  }
+
+  if (name === "road" || name === "multiple") {
+    blocked = name === "road"
+      ? new Set(["B-101", "B-109", "B-115"])
+      : new Set(["B-103", "B-110", "B-119", "B-120"]);
+  }
+
+  const info = scenarioInfo[name];
+  document.getElementById("scenarioNote").innerHTML =
+    `<strong>Current scenario: ${info.title}</strong><br>${info.text}`;
+
+  logEvent(`Scenario changed to "${info.title}".`);
+  renderAll();
+}
+
+function clearLog() {
+  logEntries = [];
+  renderLog();
+}
+
+function resetDemo() {
+  bins = cloneBins();
+  collected = new Set();
+  blocked = new Set();
+  failedTruck = false;
+  scenario = "normal";
+
+  document.getElementById("zoneFilter").value = "all";
+  document.getElementById("statusFilter").value = "all";
+  document.getElementById("scenarioNote").innerHTML =
+    `<strong>Current scenario: Normal Day</strong><br>${scenarioInfo.normal.text}`;
+
+  logEvent("Demo reset. All bins restored to initial simulated levels.");
+  renderAll();
+}
+
+bins = cloneBins();
+logEvent("SmartWasteAI demo initialized.");
+renderAll();
+</script>
+</body>
+</html>
